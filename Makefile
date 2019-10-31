@@ -1,5 +1,5 @@
 subdir_targets := all clean
-subdirs := $(dir $(wildcard */.))
+subdirs := $(dir $(wildcard */Makefile))
 goals := $(MAKECMDGOALS)
 firmwares := $(addsuffix firmware/,$(subdirs))
 release_tag = $(shell (git describe --exact-match --tags $$(git log -n1 --pretty='%h') 2>/dev/null || git describe --tags) | sed -e "s/release-//")
