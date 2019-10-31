@@ -23,8 +23,12 @@ NIM_CACHE	= $(BUILD_BASE)/user/nimcache
 # base directory for the compiler
 XTENSA_TOOLS_ROOT ?= /opt/Espressif/crosstool-NG/builds/xtensa-lx106-elf/bin
 
-# base directory of the ESP8266 SDK package, absolute
+# base directory of the ESP8266 SDK package
 SDK_BASE	?= /opt/Espressif/ESP8266_SDK
+
+# Set path related variables to have absolute paths
+override XTENSA_TOOLS_ROOT := $(abspath $(XTENSA_TOOLS_ROOT))
+override SDK_BASE := $(abspath $(SDK_BASE))
 
 # esptool.py options
 ESPPORT		?= /dev/ttyUSB0
