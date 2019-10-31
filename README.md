@@ -1,5 +1,7 @@
 # Nim on the ESP8266 -- Example Code
 
+[![Build Status](https://travis-ci.org/clj/nim-esp8266-examples.svg?branch=master)](https://travis-ci.org/clj/nim-esp8266-examples)
+
 ## Dependencies
 
 * [Nim compiler](https://nim-lang.org)
