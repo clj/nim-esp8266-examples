@@ -93,6 +93,12 @@ This example blinks the LED on pin 2.
 
 Identical behaviour to Blinky, but uses a library to abstract the raw sdk pin functions.
 
+### Garbage Collection: Regions
+
+Shows how to enable and use the *Regions* garbage collector
+
+**Note:** There are quite a few aspects of this garbage collector which does not work in the current version of Nim (1.0.2). See the source code for details.
+
 ## Troubleshooting
 
 ### rf_cal[0] !=0x05,is 0xFF
