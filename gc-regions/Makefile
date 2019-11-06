@@ -157,7 +157,7 @@ clean:
 
 $(NIM_CACHE)/%.nim.c $(NIM_CACHE)/nim_%.h: user/%.nim user/%.nim.cfg
 	$(vecho) "NIM     $@"
-	$(Q) nim c --cpu:arm --os:standalone --noMain --compileOnly --verbosity:0 --genDeps:on --nimcache:$(NIM_CACHE) --header:nim_$*.h $(NIM_SEARCH_PATHS) $<
+	$(Q) nim c --cpu:arm --os:standalone --noMain --compileOnly --verbosity:0 --genDeps:on --nimcache:$(NIM_CACHE) --header:nim_$*.h -d:nimMinHeapPages=1 $(NIM_SEARCH_PATHS) $<
 	$(Q) touch $@
 	$(Q) sed -e 's!^!$(NIM_CACHE)/main.nim.c: !' -e 's!#!\\#!' < $(NIM_CACHE)/main.deps > $(NIM_CACHE)/main.deps.mk
 
