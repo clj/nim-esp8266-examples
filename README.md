@@ -61,6 +61,7 @@ With the following variables which can be set:
 But see the top of the Makefiles for more info. Please note that the version of the SDK pointed to by `SDK_BASE` and `NIM_SDK_BASE` should agree.
 
 It can be convenient to set the above as environment variables to avoid having to pass them to `make` on every invocation. For example, create a file called `nim-esp-build-setup.sh`, with the following contents (but update the paths as required for your system):
+
 ```
 export XTENSA_TOOLS_ROOT=/opt/esp-open-sdk/xtensa-lx106-elf/bin
 export SDK_BASE=/opt/ESP8266_NONOS_SDK-2.2.1
@@ -98,6 +99,10 @@ Identical behaviour to Blinky, but uses a library to abstract the raw sdk pin fu
 Shows how to enable and use the *Regions* garbage collector
 
 **Note:** There are quite a few aspects of this garbage collector which does not work in the current version of Nim (1.0.2). See the source code for details.
+
+### MQTT: Blinky
+
+Blinks the LED on pin 2, but controllable via MQTT. A WiFi connection is required. See more information in the [mqtt-blinky example readme](mqtt-blinky/README.md).
 
 ## Troubleshooting
 
