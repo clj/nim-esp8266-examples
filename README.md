@@ -96,9 +96,13 @@ Identical behaviour to Blinky, but uses a library to abstract the raw sdk pin fu
 
 ### Garbage Collection: Regions
 
-Shows how to enable and use the *Regions* garbage collector
+Shows how to enable and use the *Regions* garbage collector.
 
-**Note:** There are quite a few aspects of this garbage collector which does not work in the current version of Nim (1.0.2). See the source code for details.
+**Note:** There are quite a few aspects of this garbage collector which does not work in the current version of Nim (1.2.0). See the source code for details.
+
+### Garbage Collection: ARC
+
+Shows how to enable and use the *ARC* garbage collector. Requires Nim 1.2.0+ (**Note:** ARC is currently experimental in 1.2.0).
 
 ### MQTT: Blinky
 
