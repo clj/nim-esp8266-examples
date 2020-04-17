@@ -54,7 +54,8 @@ CFLAGS		= -Os -g -O2 -Wpointer-arith -Wundef -Werror -Wl,-EL -fno-inline-functio
 LDFLAGS		= -nostdlib -Wl,--no-check-sections -u call_user_start -Wl,-static -Wl,-Map,$(TARGET_MAP)
 
 # linker script used for the above linkier step
-LD_SCRIPT	= eagle.app.v6.ld
+LD_SCRIPT	?= eagle.app.v6.ld
+LD_SCRIPT_DIR	?= $(NIM_SDK_BASE)/esp8266/nonos-sdk/ld/
 
 # various paths from the SDK used in this project
 SDK_LIBDIR	= lib
@@ -95,7 +96,8 @@ APP_AR		:= $(addprefix $(BUILD_BASE)/,$(TARGET)_app.a)
 TARGET_OUT	:= $(addprefix $(BUILD_BASE)/,$(TARGET).out)
 TARGET_MAP	:= $(addprefix $(BUILD_BASE)/,$(TARGET).map)
 
-LD_SCRIPT	:= $(addprefix -T$(SDK_BASE)/$(SDK_LDDIR)/,$(LD_SCRIPT))
+LD_SCRIPT	:= $(addprefix -T$(LD_SCRIPT_DIR),$(LD_SCRIPT))
+LD_SCRIPT_INCL	:= $(addprefix -L,$(LD_SCRIPT_DIR))
 
 INCDIR		:= $(addprefix -I,$(SRC_DIR) $(NIM_SDK_BASE)/esp8266/nonos-sdk)
 EXTRA_INCDIR	:= $(addprefix -I,$(EXTRA_INCDIR))
@@ -132,7 +134,7 @@ $(FW_BASE)/%.bin: $(TARGET_OUT) | $(FW_BASE)
 
 $(TARGET_OUT): $(APP_AR)
 	$(vecho) "LD      $@"
-	$(Q) $(LD) -L$(SDK_LIBDIR) $(LD_SCRIPT) $(LDFLAGS) -Wl,--start-group $(LIBS) $(APP_AR) -Wl,--end-group -o $@
+	$(Q) $(LD) $(LD_SCRIPT_INCL) -L$(SDK_LIBDIR) $(LD_SCRIPT) $(LDFLAGS) -Wl,--start-group $(LIBS) $(APP_AR) -Wl,--end-group -o $@
 
 $(APP_AR): $(OBJ) $(NIM_OBJ)
 	$(vecho) "AR      $@"

@@ -1,7 +1,6 @@
 import esp8266/nonos-sdk/os_type
 import esp8266/nonos-sdk/osapi
 import esp8266/nonos-sdk/user_interface
-import esp8266/types
 import esp8266/default_user_rf_cal_sector_set
 
 
@@ -9,7 +8,7 @@ var
   timer: os_timer_t
   obstack_reset = obstackPtr()
 
-proc timer_fn(arg: pointer) {.cdecl, section: SECTION_ROM.} =
+proc timer_fn(arg: pointer) {.cdecl.} =
   os_printf("Time: " & $system_get_time() & "\n")
   os_printf("Mem; occupied:" & $getOccupiedMem() & ", free:" &
             $getFreeMem() & ", total:" & $getTotalMem() & "\n")
@@ -31,7 +30,7 @@ proc timer_fn(arg: pointer) {.cdecl, section: SECTION_ROM.} =
 
 ### withScratchRegion
 #
-# proc timer_fn(arg: pointer) {.cdecl, section: SECTION_ROM.} =
+# proc timer_fn(arg: pointer) {.cdecl.} =
 #   withScratchRegion:
 #     os_printf("Time: " & $system_get_time() & "\n")
 #     os_printf("Mem; occupied:" & $getOccupiedMem() & ", free:" &
@@ -42,7 +41,7 @@ proc timer_fn(arg: pointer) {.cdecl, section: SECTION_ROM.} =
 #
 # var timer_region: MemRegion
 #
-# proc timer_fn(arg: pointer) {.cdecl, section: SECTION_ROM.} =
+# proc timer_fn(arg: pointer) {.cdecl.} =
 #   withRegion(timer_region):
 #     os_printf("Time: " & $system_get_time() & "\n")
 #     os_printf("Mem; occupied:" & $getOccupiedMem() & ", free:" &
@@ -53,14 +52,14 @@ proc timer_fn(arg: pointer) {.cdecl, section: SECTION_ROM.} =
 #
 # var obstack_reset: StackPtr
 #
-# proc timer_fn(arg: pointer) {.cdecl, section: SECTION_ROM.} =
+# proc timer_fn(arg: pointer) {.cdecl.} =
 #   os_printf("Time: " & $system_get_time() & "\n")
 #   os_printf("Mem; occupied:" & $getOccupiedMem() & ", free:" &
 #             $getFreeMem() & ", total:" & $getTotalMem() & "\n")
 #   setObstackPtr(obstack_reset)
 
 
-proc nim_user_init() {.exportc, section: SECTION_ROM.} =
+proc nim_user_init() {.exportc.} =
   os_printf("\n\n")
 
   let dummy = $system_get_time()  # Force something to have been allocated

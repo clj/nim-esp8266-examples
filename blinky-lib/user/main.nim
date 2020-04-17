@@ -3,7 +3,6 @@ import esp8266/nonos-sdk/gpio
 import esp8266/nonos-sdk/os_type
 import esp8266/nonos-sdk/osapi
 import esp8266/pins
-import esp8266/types
 import esp8266/default_user_rf_cal_sector_set
 
 
@@ -15,12 +14,12 @@ const
   pin = 2
 
 
-proc led_timer_fn(arg: pointer) {.cdecl, section: SECTION_ROM.} =
+proc led_timer_fn(arg: pointer) {.cdecl.} =
   let value = get_pin_state(pin)
   pin_set(pin, not value)
 
 
-proc nim_user_init() {.exportc, section: SECTION_ROM.} =
+proc nim_user_init() {.exportc.} =
   gpio_init()
 
   PIN_FUNC_SELECT(PERIPHS_IO_MUX_GPIO2_U, FUNC_GPIO2);

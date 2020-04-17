@@ -29,7 +29,7 @@ var
   ctrl_topic: string
 
 
-proc mac_address(): string {.section: SECTION_ROM.} =
+proc mac_address(): string =
   var
     mac: array[6, uint8]
   discard wifi_get_macaddr(0, cast[ptr uint8](addr mac))
@@ -43,19 +43,19 @@ template withReleasedMemory(body: untyped) =
   setObstackPtr(local_obstack_reset)
 
 
-proc led_timer_fn(arg: pointer) {.cdecl, section: SECTION_ROM.} =
+proc led_timer_fn(arg: pointer) {.cdecl.} =
   let state = get_pin_state(pin)
   discard MQTT_Publish(addr mqtt_client, state_topic, states[state], 0, 0)
   pin_set(pin, state)
 
 
-proc mqtt_connected_cb(client: ptr MQTT_Client) {. section: SECTION_ROM, cdecl .} =
+proc mqtt_connected_cb(client: ptr MQTT_Client) {.cdecl.} =
   discard MQTT_Subscribe(client, "blinky", 0)
   discard MQTT_Subscribe(client, ctrl_topic, 0)
 
 
 proc mqtt_data_cb(client: ptr MQTT_Client; topic_cstring: cconststring; topic_len: uint32;
-                  data_cstring: cconststring; data_len: uint32) {. section: SECTION_ROM, cdecl .} =
+                  data_cstring: cconststring; data_len: uint32) {.cdecl.} =
   var topic = new_mqtt_data_string(topic_cstring, topic_len)
   var data = new_mqtt_data_string(data_cstring, data_len)
   if topic == "blinky" or topic == ctrl_topic:
@@ -73,7 +73,7 @@ proc mqtt_data_cb(client: ptr MQTT_Client; topic_cstring: cconststring; topic_le
       os_timer_arm(addr led_timer, 1000, true)
 
 
-proc wifi_connect_handle_event_cb(event: ptr System_Event_t) {. section: SECTION_ROM, cdecl .} =
+proc wifi_connect_handle_event_cb(event: ptr System_Event_t) {.cdecl.} =
   case event.event:
   of EVENT_STAMODE_GOT_IP:
     withReleasedMemory:
@@ -105,7 +105,7 @@ proc wifi_setup() {. section: SECTION_ROM .} =
     os_printf("Updated station config...\n\r")
 
 
-proc app_init() {.cdecl, section: SECTION_ROM.} =
+proc app_init() {.cdecl.} =
   os_printf("\n\n")
 
   gpio_init()
@@ -122,5 +122,5 @@ proc app_init() {.cdecl, section: SECTION_ROM.} =
   wifi_setup()
 
 
-proc nim_user_init() {.exportc, section: SECTION_ROM.} =
+proc nim_user_init() {.exportc.} =
   system_init_done_cb(app_init)
