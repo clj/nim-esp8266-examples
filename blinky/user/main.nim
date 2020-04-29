@@ -2,7 +2,8 @@ import esp8266/nonos-sdk/eagle_soc
 import esp8266/nonos-sdk/gpio
 import esp8266/nonos-sdk/os_type
 import esp8266/nonos-sdk/osapi
-import esp8266/default_user_rf_cal_sector_set
+import esp8266/user_fns/default_user_rf_cal_sector_set
+import esp8266/user_fns/user_pre_init
 
 
 var
