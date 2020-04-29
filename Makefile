@@ -1,8 +1,9 @@
 subdir_targets := all clean
 subdirs := $(dir $(wildcard */Makefile))
+subdirs := $(shell echo "$(subdirs)" | nim --hints:off constraints.nims)
 goals := $(MAKECMDGOALS)
 firmwares := $(addsuffix firmware/,$(subdirs))
-release_tag = $(shell (git describe --exact-match --tags $$(git log -n1 --pretty='%h') 2>/dev/null || git describe --tags) | sed -e "s/release-//")
+release_tag := $(shell (git describe --exact-match --tags $$(git log -n1 --pretty='%h') 2>/dev/null || git describe --tags) | sed -e "s/release-//")
 release_name = nim_esp8266_examples-$(release_tag)
 
 # Set path related variables to have absolute paths
