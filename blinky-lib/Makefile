@@ -182,4 +182,8 @@ $(NIM_CACHE)/main.deps.mk:
 ifneq ($(MAKECMDGOALS), clean)
 -include $(NIM_CACHE)/nim_built.mk
 -include $(NIM_CACHE)/main.deps.mk
+sdk_version_check=$(shell $(NIM_SDK_BASE)/esp8266/nonos-sdk/bin/check_sdk_version.sh $(SDK_BASE))
+ifneq ($(sdk_version_check),)
+$(error $(sdk_version_check))
+endif
 endif
