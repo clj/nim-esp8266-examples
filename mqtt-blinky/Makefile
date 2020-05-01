@@ -192,7 +192,6 @@ $(foreach bdir,$(BUILD_DIR),$(eval $(call compile-objects,$(bdir))))
 	$(vecho) "CC      $<"
 	$(Q) $(CC) $(NIM_INCDIR) $(INCDIR) $(MODULE_INCDIR) $(EXTRA_INCDIR) $(SDK_INCDIR) $(CFLAGS)  -c $< -o $@
 
-user_main.c: $(NIM_CACHE)/nim_main.h
 $(NIM_CACHE)/stdlib_system.nim.o: CFLAGS:=$(CFLAGS) -D'malloc(size)=os_malloc(size)' -D'free(ptr)=os_free(ptr)' -include stdlib.h -include mem.h
 
 $(NIM_CACHE)/main.deps.mk:
