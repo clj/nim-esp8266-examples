@@ -24,7 +24,6 @@ const
   states = ["off", "on"]
 
 var
-  obstack_reset = obstackPtr()
   mqtt_client: MQTT_Client
   led_timer: os_timer_t
   state_topic: string
@@ -37,12 +36,6 @@ proc mac_address(): string =
   discard wifi_get_macaddr(0, cast[ptr uint8](addr mac))
   for i in 0..<len(mac):
     result &= toHex(mac[i])
-
-
-template withReleasedMemory(body: untyped) =
-  let local_obstack_reset = obstackPtr()
-  body
-  setObstackPtr(local_obstack_reset)
 
 
 proc led_timer_fn(arg: pointer) {.cdecl.} =
@@ -78,12 +71,11 @@ proc mqtt_data_cb(client: ptr MQTT_Client; topic_cstring: cconststring; topic_le
 proc wifi_connect_handle_event_cb(event: ptr System_Event_t) {.cdecl.} =
   case event.event:
   of EVENT_STAMODE_GOT_IP:
-    withReleasedMemory:
-      MQTT_InitConnection(addr mqtt_client, MQTT_BROKER_IP, MQTT_BROKER_PORT, 0)
-      discard MQTT_InitClient(addr mqtt_client, mac_address(), MQTT_USER, MQTT_PASSWD, 120, 1)
-      MQTT_Connect(addr mqtt_client)
-      MQTT_OnConnected(addr mqtt_client, mqtt_connected_cb)
-      MQTT_OnData(addr mqtt_client, mqtt_data_cb)
+    MQTT_InitConnection(addr mqtt_client, MQTT_BROKER_IP, MQTT_BROKER_PORT, 0)
+    discard MQTT_InitClient(addr mqtt_client, mac_address(), MQTT_USER, MQTT_PASSWD, 120, 1)
+    MQTT_Connect(addr mqtt_client)
+    MQTT_OnConnected(addr mqtt_client, mqtt_connected_cb)
+    MQTT_OnData(addr mqtt_client, mqtt_data_cb)
   else:
     MQTT_Disconnect(addr mqtt_client)
 
@@ -116,10 +108,6 @@ proc app_init() {.cdecl.} =
 
   ctrl_topic = "blinky/" & mac_address()
   state_topic = ctrl_topic & "/state"
-
-  obstack_reset = obstackPtr()  # Anything allocated before this call
-                                # will be preserved even after calling
-                                # setObstackPtr(obstack_reset)
 
   wifi_setup()
 
