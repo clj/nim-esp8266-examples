@@ -33,7 +33,6 @@ proc constrain(constraint: string) =
     quit(QuitFailure)
 
 
-constrain "mqtt-blinky < 1.2.0"
 constrain "blinky-lib < 1.2.0"
 
 for line in readAllFromStdin().split():
