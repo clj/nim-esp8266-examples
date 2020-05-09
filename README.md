@@ -104,6 +104,14 @@ Shows how to enable and use the *Regions* garbage collector.
 
 Shows how to enable and use the *ARC* garbage collector. Requires Nim 1.2.0+ (**Note:** ARC is currently experimental in 1.2.0).
 
+### Firmware Over the Air (FOTA)
+
+Shows how to do a FOTA update. A simple firmware server can be started using the following Python command: `python3 -m http.server 8000` in the fota example directory.
+
+**Note:** If you are using a virtual machine for development then you probably want to start the Python webserver on the **host** machine to make sure the ESP can connect to the web server.
+
+**Note:** The warning that is emitted when compiling this program is expected and due to the line that makes the following assignment: `update.ip = ip`.
+
 ### MQTT: Blinky
 
 Blinks the LED on pin 2, but controllable via MQTT. A WiFi connection is required. See more information in the [mqtt-blinky example readme](mqtt-blinky/README.md).
