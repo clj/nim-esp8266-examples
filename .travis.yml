@@ -15,7 +15,7 @@ install:
 
 script:
 - docker run nimesp/esp8266 nim --version
-- docker run -v "$(pwd):/project" -w /project nimesp/esp8266 sh -c "make SDK_BASE=ESP8266_NONOS_SDK-3.0.3 NIM_SDK_BASE=nim-esp8266-sdk/3.0.3"
+- docker run -v "$(pwd):/project" -w /project nimesp/esp8266 sh -c "make SDK_BASE=ESP8266_NONOS_SDK-3.0.3 NIM_SDK_BASE=nim-esp8266-sdk/3.0.3 WIFI_SSID=changeme WIFI_PASSWD=passwd UPDATE_SERVER=192.168.1.1:8000"
 
 before_deploy:
 - export RELEASE_DATE=${TRAVIS_TAG:8}
