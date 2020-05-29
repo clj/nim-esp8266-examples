@@ -10,16 +10,16 @@ before_install:
 
 install:
 - curl -L $(curl -L https://api.github.com/repos/clj/nim-esp8266-sdk/releases/latest | jq -r '.assets[].browser_download_url | select(. | test(".tar.gz"))') | tar -xz
-- curl -L https://github.com/espressif/ESP8266_NONOS_SDK/archive/v2.2.1.tar.gz | tar -xz
-- rm ESP8266_NONOS_SDK-2.2.1/Makefile
+- curl -L https://github.com/espressif/ESP8266_NONOS_SDK/archive/v3.0.3.tar.gz | tar -xz
+- rm ESP8266_NONOS_SDK-3.0.3/Makefile
 
 script:
 - docker run nimesp/esp8266 nim --version
-- docker run -v "$(pwd):/project" -w /project nimesp/esp8266 sh -c "make SDK_BASE=ESP8266_NONOS_SDK-2.2.1 NIM_SDK_BASE=nim-esp8266-sdk/2.2.1"
+- docker run -v "$(pwd):/project" -w /project nimesp/esp8266 sh -c "make SDK_BASE=ESP8266_NONOS_SDK-3.0.3 NIM_SDK_BASE=nim-esp8266-sdk/3.0.3"
 
 before_deploy:
 - export RELEASE_DATE=${TRAVIS_TAG:8}
-- docker run -v "$(pwd):/project" -w /project nimesp/esp8266 sh -c "make SDK_BASE=ESP8266_NONOS_SDK-2.2.1 NIM_SDK_BASE=nim-esp8266-sdk/2.2.1 dist"
+- docker run -v "$(pwd):/project" -w /project nimesp/esp8266 sh -c "make SDK_BASE=ESP8266_NONOS_SDK-3.0.3 NIM_SDK_BASE=nim-esp8266-sdk/3.0.3 dist"
 
 deploy:
   provider: releases
