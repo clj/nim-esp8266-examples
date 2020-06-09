@@ -25,7 +25,7 @@ uint32 user_rf_cal_sector_set(void) {
 #define EAGLE_IROM0TEXT_BIN_ADDR      (SYSTEM_PARTITION_CUSTOMER_BEGIN + 2)
 
 #ifndef SPI_FLASH_SIZE_MAP
-#define SPI_FLASH_SIZE_MAP 4
+#define SPI_FLASH_SIZE_MAP 2
 #endif
 
 #if ((SPI_FLASH_SIZE_MAP == 0) || (SPI_FLASH_SIZE_MAP == 1))

@@ -59,8 +59,8 @@ CFLAGS		= -Os -g -O2 -Wpointer-arith -Wundef -Wl,-EL -fno-inline-functions -nost
 LDFLAGS		= -nostdlib -Wl,--no-check-sections -u call_user_start -Wl,-static -Wl,-Map,$(TARGET_MAP)
 
 # linker script used for the above linkier step
-LD_SCRIPT_1	?= eagle.app.v6.new.2048.ld
-LD_SCRIPT_2	?= eagle.app.v6.new.2048.ld
+LD_SCRIPT_1	?= eagle.app.v6.new.1024.app1.ld
+LD_SCRIPT_2	?= eagle.app.v6.new.1024.app2.ld
 LD_SCRIPT_DIR	?= $(NIM_SDK_BASE)/esp8266/nonos-sdk/ld/
 #LD_SCRIPT_DIR	= $(SDK_BASE)/ld/
 
@@ -72,15 +72,15 @@ SDK_INCDIR	= include include/json
 # nim library path
 NIM_LIBDIR	:= $(shell nim dump 2>&1 | grep '/lib$$' | head -n 1)
 
-FLASH_SIZE ?= 2MB-c1
+FLASH_SIZE ?= 1MB
 # FOTA addresses
 # See Table 4-4 in https://www.espressif.com/sites/default/files/2a-esp8266-sdk_getting_started_guide_en_0.pdf
 BIN_ADDRESS_1 ?= 0x01000
-BIN_ADDRESS_2 ?= 0x101000
+BIN_ADDRESS_2 ?= 0x81000
 BOOTLOADER_ADDRESS ?= 0x00000
-ESP_INIT_DATA_DEFAULT_ADDR = 0x1FC000
-BLANK_1_ADDR ?= 0x1FB000
-BLANK_2_ADDR ?= 0x1FE000
+ESP_INIT_DATA_DEFAULT_ADDR = 0xFC000
+BLANK_1_ADDR ?= 0XFB000
+BLANK_2_ADDR ?= 0XFE000
 
 BOOT_BIN ?= $(addprefix $(SDK_BASE)/bin/,boot_v1.7.bin)
 ESP_INIT_DATA_DEFAULT_BIN ?= $(SDK_BASE)/bin/esp_init_data_default_v08.bin
