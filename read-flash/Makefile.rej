@@ -1,0 +1,17 @@
+***************
+*** 154,160 ****
+  	$(Q) mkdir -p $@
+  
+  flash: $(FW_FILE_1) $(FW_FILE_2)
+- 	$(ESPTOOL) --port $(ESPPORT) --baud $(ESPTOOL_BAUD) write_flash $(FW_FILE_1_ADDR) $(FW_FILE_1) $(FW_FILE_2_ADDR) $(FW_FILE_2)
+  
+  clean:
+  	$(vecho) "CLEAN"
+--- 155,161 ----
+  	$(Q) mkdir -p $@
+  
+  flash: $(FW_FILE_1) $(FW_FILE_2)
++ 	$(ESPTOOL) --port $(ESPPORT) --baud $(ESPTOOL_BAUD) write_flash --flash_size $(FLASH_SIZE) $(FW_FILE_1_ADDR) $(FW_FILE_1) $(FW_FILE_2_ADDR) $(FW_FILE_2)
+  
+  clean:
+  	$(vecho) "CLEAN"

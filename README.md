@@ -104,6 +104,22 @@ Shows how to enable and use the *Regions* garbage collector.
 
 Shows how to enable and use the *ARC* garbage collector. Requires Nim 1.2.0+ (**Note:** ARC is currently experimental in 1.2.0).
 
+### Read Data Store in Flash
+
+Shows how to read data stored in flash memory.
+
+Generating an example data.bin:
+
+```
+echo "hello world!" > data.bin && cat $SDK_BASE/bin/blank.bin >> data.bin && truncate -s 4096 data.bin
+```
+
+You can then upload this data by using the appropriate make target:
+
+```
+make flash-data
+```
+
 ### Firmware Over the Air (FOTA)
 
 Shows how to do a FOTA update. A simple firmware server can be started using the following Python command: `python3 -m http.server 8000` in the fota example directory.
