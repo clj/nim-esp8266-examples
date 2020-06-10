@@ -120,6 +120,19 @@ You can then upload this data by using the appropriate make target:
 make flash-data
 ```
 
+### WiFi
+
+Shows how to read WiFi credentials from flash and set up the Wifi using those credentials.
+
+To flash wifi credentials run the following commands:
+
+```
+make gen-data
+make flash-data
+```
+
+To view the generated data you can use a command, such as, `hexdump -C user_data.bin`.
+
 ### Firmware Over the Air (FOTA)
 
 Shows how to do a FOTA update. A simple firmware server can be started using the following Python command: `python3 -m http.server 8000` in the fota example directory.
