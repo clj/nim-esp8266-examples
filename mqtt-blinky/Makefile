@@ -14,14 +14,6 @@
 # - 2014-12-25: Replaced esptool by esptool.py
 # - 2019-09-09: Added Nim support
 
-# Program config, edit here or set environment variables to override
-WIFI_SSID	?=
-WIFI_PASSWD	?=
-MQTT_BROKER_IP  ?=
-MQTT_BROKER_PORT?=
-MQTT_USER	?=
-MQTT_PASSWD	?=
-
 # Output directors to store intermediate compiled files
 # relative to the project directory
 BUILD_BASE	= build
@@ -84,6 +76,7 @@ FLASH_SIZE	?= 1MB
 # these are the names and options to generate them
 FW_FILE_1_ADDR	= 0x00000
 FW_FILE_2_ADDR	= 0x10000
+USER_DATA_ADDR	= 0x70000
 
 # select which tools to use as compiler, librarian and linker
 CC		:= $(XTENSA_TOOLS_ROOT)/xtensa-lx106-elf-gcc
@@ -122,9 +115,6 @@ NIM_INCDIR	:= -I$(NIM_CACHE) -I$(NIM_LIBDIR)
 FW_FILE_1	:= $(addprefix $(FW_BASE)/,$(FW_FILE_1_ADDR).bin)
 FW_FILE_2	:= $(addprefix $(FW_BASE)/,$(FW_FILE_2_ADDR).bin)
 
-NIM_CONSTANTS	:= WIFI_SSID WIFI_PASSWD MQTT_BROKER_IP MQTT_BROKER_PORT MQTT_USER MQTT_PASSWD
-NIM_DEFINES	:= $(foreach const,$(NIM_CONSTANTS),$(if $(strip $(value $(const))),-d:$(const)="$(value $(const))",))
-
 V ?= $(VERBOSE)
 ifeq ("$(V)","1")
 Q :=
@@ -142,7 +132,7 @@ $1/%.o: %.c
 	$(Q) $(CC) $(NIM_INCDIR) $(INCDIR) $(MODULE_INCDIR) $(EXTRA_INCDIR) $(SDK_INCDIR) $(CFLAGS) -c $$< -o $$@
 endef
 
-.PHONY: all checkdirs flash clean
+.PHONY: all checkdirs flash flash-data gen-data clean
 
 all: checkdirs $(TARGET_OUT) $(FW_FILE_1) $(FW_FILE_2)
 
@@ -171,13 +161,24 @@ $(FW_BASE):
 flash: $(FW_FILE_1) $(FW_FILE_2)
 	$(ESPTOOL) --port $(ESPPORT) --baud $(ESPTOOL_BAUD) write_flash --flash_size $(FLASH_SIZE) $(FW_FILE_1_ADDR) $(FW_FILE_1) $(FW_FILE_2_ADDR) $(FW_FILE_2)
 
+gen-data:
+	$(vecho) "NIM RUN $@"
+	nim c -r $(NIM_SEARCH_PATHS) user/user_data.nim
+
+flash-data:
+	$(ESPTOOL) --port $(ESPPORT) --baud $(ESPTOOL_BAUD) write_flash --flash_size $(FLASH_SIZE) $(USER_DATA_ADDR) user_data.bin
+
+$(FW_BASE)/user_data.py: user_data.py
+	$(vecho) "CP      $@"
+	$(Q) cp $< $@
+
 clean:
 	$(vecho) "CLEAN"
 	$(Q) rm -rf $(FW_BASE) $(BUILD_BASE)
 
 $(NIM_CACHE)/%.nim.c $(NIM_CACHE)/nim_%.h: user/%.nim user/%.nim.cfg
 	$(vecho) "NIM     $@"
-	$(Q) nim c --cpu:arm --os:standalone --noMain --compileOnly --verbosity:0 --genDeps:on --nimcache:$(NIM_CACHE) --header:nim_$*.h -d:nimMinHeapPages=1 $(NIM_DEFINES) $(NIM_SEARCH_PATHS) $<
+	$(Q) nim c --cpu:arm --os:standalone --noMain --compileOnly --verbosity:0 --genDeps:on --nimcache:$(NIM_CACHE) --header:nim_$*.h -d:nimMinHeapPages=1 $(NIM_SEARCH_PATHS) $<
 	$(Q) touch $@
 	$(Q) sed -e 's!^!$(NIM_CACHE)/main.nim.c: !' -e 's!#!\\#!' < $(NIM_CACHE)/main.deps > $(NIM_CACHE)/main.deps.mk
 

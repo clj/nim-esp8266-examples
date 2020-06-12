@@ -5,6 +5,7 @@ import esp8266/nonos-sdk/eagle_soc
 import esp8266/nonos-sdk/gpio
 import esp8266/nonos-sdk/os_type
 import esp8266/nonos-sdk/osapi
+import esp8266/nonos-sdk/spi_flash
 import esp8266/nonos-sdk/user_interface
 import esp8266/pins
 import esp8266/types
@@ -12,18 +13,17 @@ import esp8266/user_fns/default_user_rf_cal_sector_set
 import esp8266/user_fns/user_init
 import esp8266/user_fns/user_pre_init
 
+import user_data
+
 
 const
-  WIFI_SSID {.strdefine.} = "changeme"
-  WIFI_PASSWD {.strdefine.} = "changeme"
-  MQTT_BROKER_IP {.strdefine.} = "changeme"
-  MQTT_BROKER_PORT {.intdefine.} = 1883
-  MQTT_USER {.strdefine.} = nil
-  MQTT_PASSWD {.strdefine.} = nil
   pin = 2
   states = ["off", "on"]
 
+
 var
+  data: Data
+  wifi_config: station_config
   mqtt_client: MQTT_Client
   led_timer: os_timer_t
   state_topic: string
@@ -69,10 +69,14 @@ proc mqtt_data_cb(client: ptr MQTT_Client; topic_cstring: cconststring; topic_le
 
 
 proc wifi_connect_handle_event_cb(event: ptr System_Event_t) {.cdecl.} =
+  let ip = join(data.settings.mqtt.ip, ".")
+  let username = cast[cstring](if data.settings.mqtt.username[0] == 0: nil else: addr data.settings.mqtt.username)
+  let password = cast[cstring](if data.settings.mqtt.password[0] == 0: nil else: addr data.settings.mqtt.password)
+
   case event.event:
   of EVENT_STAMODE_GOT_IP:
-    MQTT_InitConnection(addr mqtt_client, MQTT_BROKER_IP, MQTT_BROKER_PORT, 0)
-    discard MQTT_InitClient(addr mqtt_client, mac_address(), MQTT_USER, MQTT_PASSWD, 120, 1)
+    MQTT_InitConnection(addr mqtt_client, ip, data.settings.mqtt.port, 0)
+    discard MQTT_InitClient(addr mqtt_client, mac_address(), username, password, 120, 1)
     MQTT_Connect(addr mqtt_client)
     MQTT_OnConnected(addr mqtt_client, mqtt_connected_cb)
     MQTT_OnData(addr mqtt_client, mqtt_data_cb)
@@ -80,23 +84,16 @@ proc wifi_connect_handle_event_cb(event: ptr System_Event_t) {.cdecl.} =
     MQTT_Disconnect(addr mqtt_client)
 
 
-proc wifi_setup() {. section: SECTION_ROM .} =
-    wifi_set_event_handler_cb(wifi_connect_handle_event_cb)
+proc wifi_setup() =
+  wifi_set_event_handler_cb(wifi_connect_handle_event_cb)
 
-    let wifi_opmode = wifi_get_opmode_default()
-    if wifi_opmode != uint8(STATION_MODE):
-      os_printf("Setting Wifi mode to station mode\r\n")
-      discard wifi_set_opmode(uint8(STATION_MODE))
-
-    var new_config: station_config
-    new_config.bssid_set = 0
-    new_config.ssid.set_string(WIFI_SSID)
-    new_config.password.set_string(WIFI_PASSWD)
-    discard wifi_station_set_config(addr new_config)
-    discard wifi_station_set_auto_connect((uint8)true)
-    discard wifi_station_ap_number_set(5)
-
-    os_printf("Updated station config...\n\r")
+  discard wifi_set_opmode(uint8(STATION_MODE))
+  wifi_config.bssid_set = 0
+  wifi_config.ssid = data.settings.wifi.ssid
+  wifi_config.password = data.settings.wifi.password
+  discard wifi_station_set_config(addr wifi_config)
+  discard wifi_station_set_auto_connect((uint8)false)
+  discard wifi_station_ap_number_set(0)
 
 
 proc app_init() {.cdecl.} =
@@ -109,8 +106,35 @@ proc app_init() {.cdecl.} =
   ctrl_topic = "blinky/" & mac_address()
   state_topic = ctrl_topic & "/state"
 
-  wifi_setup()
+  discard wifi_station_connect()
 
 
 proc nim_user_init() {.exportc.} =
-  system_init_done_cb(app_init)
+  os_printf("\n\n")
+
+  var
+    part_info: partition_item_t
+
+  block:
+    let result = system_partition_get_item(partition_type_t(103),
+        addr part_info)
+    if not result:
+      os_printf("system_partition_get_item returned an error\n")
+      return
+
+  block:
+    let result = spi_flash_read(part_info.`addr`, addr data, uint32(sizeof(data)))
+    if result != SPI_FLASH_RESULT_OK:
+      os_printf("spi_flash_read returned an error %d\n", result)
+      return
+
+  let (ok, msg) = data.verify()
+  if ok:
+    wifi_setup()
+
+    system_init_done_cb(app_init)
+  else:
+    os_printf(
+      "No valid user data found: %s\n" &
+      "please upload valid data to flash @0x%08x\n",
+      msg, part_info.`addr`)
