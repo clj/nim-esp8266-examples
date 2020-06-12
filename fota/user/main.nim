@@ -1,8 +1,9 @@
-import strutils  # Only used in the const section below to set ip and port
+import strutils
 
 import esp8266/nonos-sdk/espconn
 import esp8266/nonos-sdk/os_type
 import esp8266/nonos-sdk/osapi
+import esp8266/nonos-sdk/spi_flash
 import esp8266/nonos-sdk/upgrade
 import esp8266/nonos-sdk/user_interface
 import esp8266/types
@@ -10,33 +11,16 @@ import esp8266/user_fns/default_user_rf_cal_sector_set
 import esp8266/user_fns/user_init
 import esp8266/user_fns/user_pre_init
 
-
-const
-  WIFI_SSID {.strdefine.} = ""
-  WIFI_PASSWD {.strdefine.} = ""
-  UPDATE_SERVER {.strdefine.} = ""
-  UPDATE_PREFIX {.strdefine.} = "/firmware/"
-
-
-when WIFI_SSID == "" or WIFI_PASSWD == "" or UPDATE_SERVER == "":
-  {.fatal: "Please set WIFI_SSID, WIFI_PASSWD, and UPDATE_SERVER".}
-
-
-const
-  port: uint16 = static: (uint16)UPDATE_SERVER.split(':', 2)[1].parseUInt()
-  ip: array[4, uint8] = static:
-    var ip: array[4, uint8]
-    var octets = UPDATE_SERVER.split(':', 2)[0].split('.', 4)
-    for i, octet in octets:
-      ip[i] = (uint8)octet.parseUInt()
-    ip
+import user_data
 
 
 var
+  data: Data
+  wifi_config: station_config
+  update: upgrade_server_info
+  conn: espconn
   timer: os_timer_t
   url: string
-  conn: espconn
-  update: upgrade_server_info
   count = 10
 
 
@@ -57,6 +41,15 @@ proc ota_finished_callback(arg: pointer) {.cdecl.} =
     os_timer_arm(addr timer, 1000, true)
 
 
+proc updateHost(): string =
+  return join(data.settings.fota.ip, ".") & ":" & $data.settings.fota.port
+
+
+proc updatePath(): string =
+  # Lets hope there is still a terminating null char :)
+  return $cast[cstring](addr data.settings.fota.path)
+
+
 proc start_update() =
   os_printf("\n\n")
 
@@ -66,13 +59,13 @@ proc start_update() =
   else:
     user_bin = "user1.bin"
 
-  url = ("GET " & UPDATE_PREFIX & user_bin & " HTTP/1.1\r\n" &
-         "Host: " & UPDATE_SERVER & "\r\n" &
+  url = ("GET " & updatePath() & user_bin & " HTTP/1.1\r\n" &
+         "Host: " & updateHost() & "\r\n" &
          "Connection: close\r\n" &
          "\r\n")
   update.pespconn = addr conn
-  update.ip = ip
-  update.port = port
+  update.ip = data.settings.fota.ip
+  update.port = data.settings.fota.port
   update.check_cb = ota_finished_callback
   update.check_times = 10000
   update.url = cast[ptr uint8](cstring(url))
@@ -106,36 +99,53 @@ proc wifi_connect_handle_event_cb(event: ptr System_Event_t) {.cdecl.} =
 
 
 proc wifi_setup() =
-    wifi_set_event_handler_cb(wifi_connect_handle_event_cb)
+  wifi_set_event_handler_cb(wifi_connect_handle_event_cb)
 
-    let wifi_opmode = wifi_get_opmode_default()
-    if wifi_opmode != uint8(STATION_MODE):
-      os_printf("Setting Wifi mode to station mode\r\n")
-      discard wifi_set_opmode(uint8(STATION_MODE))
-
-    var new_config: station_config
-    new_config.bssid_set = 0
-    new_config.ssid.set_string(WIFI_SSID)
-    new_config.password.set_string(WIFI_PASSWD)
-    discard wifi_station_set_config(addr new_config)
-    discard wifi_station_set_auto_connect((uint8)true)
-    discard wifi_station_ap_number_set(5)
-
-    if wifi_station_get_connect_status() == 0:
-      discard wifi_station_connect()
-
-    os_printf("Updated station config...\n\r")
+  discard wifi_set_opmode(uint8(STATION_MODE))
+  wifi_config.bssid_set = 0
+  wifi_config.ssid = data.settings.wifi.ssid
+  wifi_config.password = data.settings.wifi.password
+  discard wifi_station_set_config(addr wifi_config)
+  discard wifi_station_set_auto_connect((uint8)false)
+  discard wifi_station_ap_number_set(0)
 
 
 proc app_init() {.cdecl.} =
   os_printf("\n\n")
-
-  wifi_setup()
-
   os_printf("system_upgrade_userbin_check: %d\n", system_upgrade_userbin_check())
-  os_printf("upgrade server: %s\n", UPDATE_SERVER)
+  os_printf("upgrade server: %s%s\n", updateHost(), updatePath())
   os_printf("compile timestamp: %sT%sZ\n", CompileDate, CompileTime)
+  os_printf("\n\n")
+
+  discard wifi_station_connect()
 
 
 proc nim_user_init() {.exportc.} =
-  system_init_done_cb(app_init)
+  os_printf("\n\n")
+
+  var
+    part_info: partition_item_t
+
+  block:
+    let result = system_partition_get_item(partition_type_t(100),
+        addr part_info)
+    if not result:
+      os_printf("system_partition_get_item returned an error\n")
+      return
+
+  block:
+    let result = spi_flash_read(part_info.`addr`, addr data, uint32(sizeof(data)))
+    if result != SPI_FLASH_RESULT_OK:
+      os_printf("spi_flash_read returned an error %d\n", result)
+      return
+
+  let (ok, msg) = data.verify()
+  if ok:
+    wifi_setup()
+
+    system_init_done_cb(app_init)
+  else:
+    os_printf(
+      "No valid user data found: %s\n" &
+      "please upload valid data to flash @0x%08x\n",
+      msg, part_info.`addr`)
