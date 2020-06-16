@@ -77,9 +77,9 @@ proc wifi_connect_handle_event_cb(event: ptr System_Event_t) {.cdecl.} =
   of EVENT_STAMODE_GOT_IP:
     MQTT_InitConnection(addr mqtt_client, ip, data.settings.mqtt.port, 0)
     discard MQTT_InitClient(addr mqtt_client, mac_address(), username, password, 120, 1)
-    MQTT_Connect(addr mqtt_client)
     MQTT_OnConnected(addr mqtt_client, mqtt_connected_cb)
     MQTT_OnData(addr mqtt_client, mqtt_data_cb)
+    MQTT_Connect(addr mqtt_client)
   else:
     MQTT_Disconnect(addr mqtt_client)
 
